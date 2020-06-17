@@ -1,1 +1,1 @@
-anon-chan-bot
+AnonChan
