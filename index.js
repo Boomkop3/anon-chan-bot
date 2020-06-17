@@ -10,18 +10,35 @@ const bot = new Discord.Client({
 
 console.log('starting bot...');
 
-let spam = []; 
-let logChannel = "";
+let anons = [];
+let spam = [];
+let unspam = [];
+let channel = '';
+let selfid = '';
+let clientid = '';
+let selfref = '<@!' + clientid + '>';
 
-setInterval(()=>{
-	if (spam.length > 0){
-		bot.sendMessage({
-			to: logChannel,
-			message: spam.shift()
-		});
-		console.log('flusing log...');
-	}
-}, 1500);
+bot.on('ready', function () {
+	setInterval(()=>{
+		if (unspam.length > 0){
+			bot.deleteMessage({
+				"channelID": channel, 
+				"messageID": unspam.shift()
+			}, 
+			function (error) {
+				console.log(error);
+			});
+			console.log('flushing unspam...');
+		}
+		if (spam.length > 0){
+			bot.sendMessage({
+				to: channel,
+				message: spam.shift()
+			});
+			console.log('flushing spam...');
+		}
+	}, 3000);
+});
 
 bot.on('disconnect', (error, code)=>{
 	bot.connect();
@@ -29,20 +46,26 @@ bot.on('disconnect', (error, code)=>{
 
 bot.on('message', function (user, userID, channelID, message, evt) {
     try {
-		let sourceChannel = "" + channelID;
-		if (logChannel == sourceChannel){
-			return;
+		if (channelID != channel) { return; }; // Lock to my channel
+		if (userID == selfid) { return; } // Don't respond to self
+		if (message == '!anon help' || message.startsWith(selfref)){
+			spam.push("Just say '!anon' to summon my devine powers");
 		}
-		console.log(auth.id + ": input from: " + user);
-        const data = JSON.stringify({
-            user: user,
-            userID: userID,
-            channelID: channelID,
-            message: message,
-            evt: evt
-        });
-		let logMessage = "user: " + user + "\r\n" + "in channel: " + channelID + "\r\nmessage: \r\n" + message;
-		spam.push(logMessage);
+		if (anons.includes(userID)){
+			if (message == '!anon'){
+				anons = anons.filter(anon => anon != userID);
+				spam.push('Bye anon');
+			} else {
+				var messageid = evt.d.id;
+				unspam.push(messageid);
+				spam.push(message);		
+			}
+		} else {
+			if (message == '!anon'){
+				anons.push(userID);
+				spam.push('Hi anon');
+			}
+		}
     } catch (error) {
         console.log(error);
     }
