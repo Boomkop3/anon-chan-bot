@@ -1,0 +1,13 @@
+echo anonchan install script
+echo dont expect this to go well
+echo installing dependencies
+npm install --save
+echo copying required files...
+cp anonchan.service /etc/systemd/system/anonchan.service
+echo reloading services...
+systemctl daemon-reload
+echo enabling service...
+systemctl enable anonchan
+echo starting service...
+systemctl start anonchan
+echo installation complete
